@@ -47,10 +47,12 @@
         </div>
     </div>
 
-    const config = {
-    jsonbinId: '68f445ed43b1c97be9701261',  // ← NUEVO Bin ID
-    jsonbinApiKey: '$2a$10$Uwte524/p56MUpYn79uOsuzSVBP6VU8AqNKw8figIKdsE1PrtnCLi'  // ← Master Key
-};
+    <script>
+        // CONFIGURACIÓN
+        const config = {
+            jsonbinId: '68f445ed43b1c97be9701261',
+            jsonbinApiKey: '$2a$10$Uwte524/p56MUpYn79uOsuzSVBP6VU8AqNKw8figIKdsE1PrtnCLi'
+        };
 
         // LÓGICA PRINCIPAL
         async function guardarConfiguration() {
@@ -65,7 +67,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Access-Key': config.jsonbinApiKey
+                        'X-Master-Key': config.jsonbinApiKey  // ← CAMBIÉ a X-Master-Key
                     },
                     body: JSON.stringify({
                         app: "Coapé",
