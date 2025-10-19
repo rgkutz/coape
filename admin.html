@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coapé - Panel Administrativo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>⚙️ PANEL ADMINISTRATIVO COAPÉ</h1>
+            <p>Gestión de Socios y Sistema</p>
+            <button class="btn-volver" onclick="volverALogin()">← Volver al Login</button>
+        </div>
+
+        <div class="admin-section">
+            <h2>👥 Agregar Nuevo Socio</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Usuario:</label>
+                    <input type="text" id="nuevo-usuario" placeholder="Ej: juanperez">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña:</label>
+                    <input type="text" id="nueva-password" placeholder="Ej: coape123">
+                </div>
+                <div class="form-group">
+                    <label>Nombre Completo:</label>
+                    <input type="text" id="nombre-completo" placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input type="text" id="telefono" placeholder="3764...">
+                </div>
+                <div class="form-group">
+                    <label>Zona:</label>
+                    <select id="zona">
+                        <option value="ruta153">Ruta 153</option>
+                        <option value="rio">Río Corrientes</option>
+                        <option value="campo">Campo Gral. Paz</option>
+                        <option value="esmeralda">Estancia La Esmeralda</option>
+                        <option value="costaguazu">Paraje Costa Guazú</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Colmenas Iniciales:</label>
+                    <input type="number" id="colmenas" placeholder="0" value="0">
+                </div>
+            </div>
+            <button class="btn-success" onclick="agregarSocio()">✅ Agregar Socio</button>
+        </div>
+
+        <div class="admin-section">
+            <h2>📋 Socios Registrados</h2>
+            <div class="search-box">
+                <input type="text" id="buscar-socio" placeholder="🔍 Buscar socio..." onkeyup="filtrarSocios()">
+            </div>
+            <div id="lista-socios" class="socios-list"></div>
+        </div>
+
+        <div class="admin-section">
+            <h2>📊 Estadísticas Generales</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="total-socios">0</h3>
+                    <p>Total Socios</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="total-colmenas">0</h3>
+                    <p>Total Colmenas</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="socios-activos">0</h3>
+                    <p>Socios Activos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coapé - Panel del Socio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="socio-container">
+        <div class="socio-header">
+            <button class="btn-volver" onclick="cerrarSesion()">← Cerrar Sesión</button>
+            <h1>🐝 COAPÉ ESQUINA</h1>
+            <p>Panel del Socio Apicultor</p>
+        </div>
+
+        <div id="socio-info" class="socio-card">
+            <h2>👤 Mi Información</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Nombre:</label>
+                    <span id="info-nombre">-</span>
+                </div>
+                <div class="info-item">
+                    <label>Teléfono:</label>
+                    <span id="info-telefono">-</span>
+                </div>
+                <div class="info-item">
+                    <label>Zona:</label>
+                    <span id="info-zona">-</span>
+                </div>
+                <div class="info-item">
+                    <label>Colmenas Activas:</label>
+                    <span id="info-colmenas">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="total-colmenas">0</h3>
+                <p>COLMENAS ACTIVAS</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="produccion-actual">0 kg</h3>
+                <p>PRODUCCIÓN ÚLTIMA</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="estado-cuota">-</h3>
+                <p>ESTADO CUOTA</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="deuda-maquinaria">0 kg</h3>
+                <p>DEUDA MAQUINARIA</p>
+            </div>
+        </div>
+
+        <div id="alertas" class="socio-card alerta">
+            <h2>⚠️ Alertas Importantes</h2>
+            <div id="alertas-content"></div>
+        </div>
+
+        <div class="socio-card">
+            <h2>🏭 Gestión Apícola</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Registrar Nueva Producción (kg):</label>
+                    <input type="number" id="nueva-produccion" placeholder="0">
+                    <button class="btn-success" onclick="registrarProduccion()">📝 Registrar</button>
+                </div>
+                <div class="form-group">
+                    <label>Registrar Cura Aplicada:</label>
+                    <select id="tipo-cura">
+                        <option value="primavera">Cura de Primavera</option>
+                        <option value="verano">Cura de Verano</option>
+                        <option value="otoño">Cura de Otoño</option>
+                    </select>
+                    <button class="btn-success" onclick="registrarCura()">✅ Registrar Cura</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="socio-card">
+            <h2>📅 Próximas Actividades</h2>
+            <div id="proximas-actividades"></div>
+        </div>
+
+        <div id="mensaje-socio" class="mensaje"></div>
+    </div>
+
+    <script>
+        function cargarDatosSocio() {
+            const usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+            const usuariosCoape = JSON.parse(localStorage.getItem('usuariosCoape')) || {};
+            
+            if (!usuarioActual || !usuariosCoape[usuarioActual.usuario]) {
+                mostrarError('❌ No se encontró información del socio. Redirigiendo al login...');
+                setTimeout(() => window.location.href = 'index.html', 3000);
+                return;
+            }
+
+            const socio = usuariosCoape[usuarioActual.usuario];
+            
+            document.getElementById('info-nombre').textContent = socio.nombre;
+            document.getElementById('info-telefono').textContent = socio.telefono || 'No registrado';
+            document.getElementById('info-zona').textContent = socio.zona || 'No especificada';
+            document.getElementById('info-colmenas').textContent = socio.colmenas || 0;
+
+            document.getElementById('total-colmenas').textContent = socio.colmenas || 0;
+            document.getElementById('produccion-actual').textContent = (socio.produccion || 0) + ' kg';
+            document.getElementById('estado-cuota').textContent = socio.estadoCuota || 'PENDIENTE';
+            document.getElementById('deuda-maquinaria').textContent = (socio.deudaMaquinaria || 0) + ' kg';
+
+            const estadoCuota = document.getElementById('estado-cuota');
+            estadoCuota.style.color = socio.estadoCuota === 'AL DÍA' ? '#28a745' : '#dc3545';
+
+            cargarAlertas(socio);
+            cargarProximasActividades(socio);
+        }
+
+        function cargarAlertas(socio) {
+            const alertasContent = document.getElementById('alertas-content');
+            let alertasHTML = '';
+
+            const ultimaCura = socio.ultimaCura || '01/10/2024';
+            const fechaUltimaCura = new Date(ultimaCura);
+            const diffDays = Math.ceil((new Date() - fechaUltimaCura) / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 90) {
+                alertasHTML += `<div class="alerta-item"><strong>🚨 La fecha de tu próxima cura ya pasó.</strong><p>Por favor, programa una nueva cura.</p></div>`;
+            }
+            if (socio.estadoCuota !== 'AL DÍA') {
+                alertasHTML += `<div class="alerta-item"><strong>💰 Cuota Societaria Pendiente</strong><p>Regulariza tu situación.</p></div>`;
+            }
+            if ((socio.deudaMaquinaria || 0) > 0) {
+                alertasHTML += `<div class="alerta-item"><strong>🏭 Deuda por Maquinaria</strong><p>Tienes ${socio.deudaMaquinaria} kg pendientes.</p></div>`;
+            }
+
+            alertasContent.innerHTML = alertasHTML || '<p>✅ Todo en orden. No hay alertas pendientes.</p>';
+            if (!alertasHTML) document.getElementById('alertas').classList.remove('alerta');
+        }
+
+        function cargarProximasActividades(socio) {
+            const actividadesContent = document.getElementById('proximas-actividades');
+            const actividades = [
+                { actividad: 'Próxima Cura Programada', fecha: '01/12/2024' },
+                { actividad: 'Vencimiento Cuota Societaria', fecha: 'AL DÍA' },
+                { actividad: 'Época de Cosecha', fecha: 'Octubre - Noviembre' },
+                { actividad: 'Reunión de Socios', fecha: 'Primer sábado de cada mes' }
+            ];
+
+            let actividadesHTML = '';
+            actividades.forEach(act => {
+                actividadesHTML += `<div class="actividad-item"><strong>${act.actividad}</strong><span class="fecha">${act.fecha}</span></div>`;
+            });
+            actividadesContent.innerHTML = actividadesHTML;
+        }
+
+        function registrarProduccion() {
+            const produccion = parseInt(document.getElementById('nueva-produccion').value);
+            if (!produccion || produccion <= 0) {
+                mostrarMensaje('❌ Ingrese una cantidad válida', 'error'); return;
+            }
+
+            const usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+            const usuariosCoape = JSON.parse(localStorage.getItem('usuariosCoape'));
+            
+            if (usuariosCoape[usuarioActual.usuario]) {
+                usuariosCoape[usuarioActual.usuario].produccion = produccion;
+                usuariosCoape[usuarioActual.usuario].ultimaActualizacion = new Date().toLocaleDateString();
+                localStorage.setItem('usuariosCoape', JSON.stringify(usuariosCoape));
+                mostrarMensaje('✅ Producción registrada correctamente', 'success');
+                document.getElementById('nueva-produccion').value = '';
+                setTimeout(cargarDatosSocio, 1000);
+            }
+        }
+
+        function registrarCura() {
+            const tipoCura = document.getElementById('tipo-cura').value;
+            const usuarioActual = JSON.parse(localStorage.getItem('usuarioActual'));
+            const usuariosCoape = JSON.parse(localStorage.getItem('usuariosCoape'));
+            
+            if (usuariosCoape[usuarioActual.usuario]) {
+                usuariosCoape[usuarioActual.usuario].ultimaCura = new Date().toLocaleDateString();
+                usuariosCoape[usuarioActual.usuario].tipoUltimaCura = tipoCura;
+                localStorage.setItem('usuariosCoape', JSON.stringify(usuariosCoape));
+                mostrarMensaje(`✅ Cura de ${tipoCura} registrada`, 'success');
+                setTimeout(cargarDatosSocio, 1000);
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('usuarioActual');
+            window.location.href = 'index.html';
+        }
+
+        function mostrarMensaje(mensaje, tipo) {
+            const mensajeDiv = document.getElementById('mensaje-socio');
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.className = `mensaje ${tipo}`;
+            setTimeout(() => { mensajeDiv.textContent = ''; mensajeDiv.className = 'mensaje'; }, 5000);
+        }
+
+        function mostrarError(mensaje) {
+            const mensajeDiv = document.getElementById('mensaje-socio');
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.className = 'mensaje error';
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarDatosSocio);
+    </script>
+
+    <style>
+        .socio-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .socio-header { text-align: center; margin-bottom: 30px; position: relative; }
+        .socio-header .btn-volver { position: absolute; left: 0; top: 0; }
+        .socio-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px; border-left: 5px solid #667eea; }
+        .socio-card h2 { color: #2c3e50; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-item label { font-weight: bold; color: #666; font-size: 14px; margin-bottom: 5px; }
+        .info-item span { color: #333; font-size: 16px; }
+        .alerta { border-left-color: #dc3545; background: #fff5f5; }
+        .alerta-item { padding: 10px; margin-bottom: 10px; background: white; border-radius: 8px; border-left: 4px solid #dc3545; }
+        .actividad-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 10px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745; }
+        .actividad-item .fecha { color: #666; font-weight: bold; }
+        .mensaje { padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center; font-weight: bold; }
+        .mensaje.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .mensaje.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        @media (max-width: 768px) {
+            .socio-container { padding: 10px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .actividad-item { flex-direction: column; align-items: flex-start; }
+            .socio-header .btn-volver { position: relative; margin-bottom: 15px; }
+        }
+    </style>
+</body>
+</html>
